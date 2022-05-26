@@ -1,0 +1,22 @@
+{
+  "name": "notsomeboringwebsite",
+  "version": "1.0.0",
+  "description": "the backend of SomeBoringNerd's API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "npm i body-parser express express-github-webhook needle simple-discord-wh"
+  },
+  "author": "SomeBoringNerd",
+  "license": "ISC",
+  "dependencies": {
+    "@prince25/discord-webhook-sender": "^1.2.3",
+    "body-parser": "^1.20.0",
+    "express": "^4.18.1",
+    "express-github-webhook": "^1.0.6",
+    "minecraft-server-status-simple": "^1.1.2",
+    "minecraft-server-util": "^5.2.9",
+    "needle": "^3.1.0",
+    "simple-discord-wh": "^1.0.3"
+  }
+}
