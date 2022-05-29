@@ -5,7 +5,14 @@ just an average backend api that have nothing special, outside of stuff for my o
 # endpoints : 
 
 /api/through_the_dark/student?id=[number] : return a json array with the infos of a character of my game
+
 /api/status?ip=[ip] : give infos of the minecraft server given (with additional info for specifics servers)
+
+/api/ttd/download/win : download the windows build of the game
+
+/api/ttd/download/mac : download the windows build of the game
+
+/api/ttd/download/nix : download the windows build of the game
 
 # how to install
 
@@ -25,6 +32,8 @@ now, edit the config file :
 
 if needed, place a discord webhook, and the github secret password of your choosen repo 
 (more info here : https://docs.github.com/en/developers/webhooks-and-events/webhooks/about-webhooks)
+
+if needed, place data base information
 
 at last, run 
 `node index.js`
