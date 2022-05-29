@@ -1,5 +1,12 @@
 {
     "domain":"localhost",
     "github_secret":"",
-    "webhook":""
+    "webhook":"",
+    "webhook_api":"",
+    "webhook_loader":"",
+    "chr_add_token":"",
+    "db_host": "",
+    "db_user": "",
+    "db_password": "",
+    "db_database": ""
 }

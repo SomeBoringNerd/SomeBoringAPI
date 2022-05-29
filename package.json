@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "install": "npm i body-parser express express-github-webhook needle simple-discord-wh"
+    "install": "npm i body-parser express express-github-webhook needle simple-discord-wh mysql"
   },
   "author": "SomeBoringNerd",
   "license": "ISC",
@@ -16,6 +16,7 @@
     "express-github-webhook": "^1.0.6",
     "minecraft-server-status-simple": "^1.1.2",
     "minecraft-server-util": "^5.2.9",
+    "mysql": "^2.18.1",
     "needle": "^3.1.0",
     "simple-discord-wh": "^1.0.3"
   }
