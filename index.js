@@ -1,6 +1,7 @@
 const express = require('express')
 const needle = require('needle')
 const mysql = require('mysql');
+const rateLimit = require('express-rate-limit')
 
 const { Webhook, Embed } = require('simple-discord-wh');
 
@@ -18,6 +19,13 @@ var webhook = config.webhook;
 var webhook_api = config.webhook_api;
 var webhook_loader = config.webhook_loader;
 var domain = config.domain;
+
+const limiter = rateLimit({
+	windowMs: 1 * 60 * 1000, // 1 minutes
+	max: 25, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+})
 
 var con = mysql.createConnection({
     host: config.db_host,
@@ -104,11 +112,16 @@ api.listen(port, () => {
 })
 
 api.use(bodyParser.json()); // must use bodyParser in express
-
+api.use(limiter) // rate limit
 // in latest body-parser use like below.
 api.use(bodyParser.urlencoded({ extended: true }));
 
 api.use(webhookHandler);
+
+api.set('trust proxy', 1)
+api.get('/api/ip', (request, response) => response.send(request.ip))
+
+
 
 api.get(sub, (req, res) => {
 
@@ -136,25 +149,28 @@ api.get(sub + '/status', (req, res) =>
     {
         let minecraft_status = "";
         needle('get', "https://api.mcsrvstat.us/2/" + req.query.ip).then(r => {
-            minecraft_status += "<html>\n<head>\n<title>Minecraft Lookup</title>\n</head>\n"
-            minecraft_status += "<h1>info about the server " + req.query.ip + "</h1>\n<body>\n"
+            try{
+                minecraft_status += "<html>\n<head>\n<title>Minecraft Lookup</title>\n</head>\n"
+                minecraft_status += "<h1>info about the server " + req.query.ip + "</h1>\n<body>\n"
+                
+                minecraft_status += "ip : " + r.body['ip'] + '\n'
+                minecraft_status += "<br>port : " + r.body['port'] + '\n'
+                minecraft_status += "<br>motd : " + r.body['motd']['clean'][0] + '\n'
+                minecraft_status += "<br>motd² : " + r.body['motd']['clean'][1] + '\n'
+                minecraft_status += "<br>player count : " + r.body['players']['online'] + '\n'
 
-            minecraft_status += "ip : " + r.body['ip'] + '\n'
-            minecraft_status += "<br>port : " + r.body['port'] + '\n'
-            minecraft_status += "<br>motd : " + r.body['motd']['clean'][0] + '\n'
-            minecraft_status += "<br>motd² : " + r.body['motd']['clean'][1] + '\n'
-            minecraft_status += "<br>player count : " + r.body['players']['online'] + '\n'
+                if(req.query.ip == "2b2t.org")
+                {
+                    minecraft_status += "<br><h1>2b2t specific stuff</h1>\n"
+                    minecraft_status += "<h3>queue</h3>\n"
+                    minecraft_status += r.body['info']['clean'][1] + "<br>\n"
+                    minecraft_status += r.body['info']['clean'][0] + "\n"
+                }
 
-            if(req.query.ip == "2b2t.org")
-            {
-                minecraft_status += "<br><h1>2b2t specific stuff</h1>\n"
-                minecraft_status += "<h3>queue</h3>\n"
-                minecraft_status += r.body['info']['clean'][1] + "<br>\n"
-                minecraft_status += r.body['info']['clean'][0] + "\n"
+                minecraft_status += '<h3> values fetched from <a href="https://api.mcsrvstat.us">api.mcsrvstat.us</a></h3>\n</body>\n</html>'
+            }catch{
+                minecraft_status = 'an error has occured with the api, please try again later'
             }
-
-            minecraft_status += '<h3> values fetched from <a href="https://api.mcsrvstat.us">api.mcsrvstat.us</a></h3>\n</body>\n</html>'
-
             res.send(minecraft_status)
         })
 
@@ -164,44 +180,49 @@ api.get(sub + '/status', (req, res) =>
 api.get(sub + '/ttd/student', (req, res) =>
 {
     let id_select = parseInt(req.query.id);
-
-    var sql = "SELECT * FROM character_list WHERE chr_id = " + id_select + ";";
-    console.log(id_select)
-    con.query(sql, function (err, result, field) {
-        if (err) throw console.log(err);
-        
-        
-        var sql2 = "SELECT * FROM character_list;";
-        con.query(sql2, function (err, results, field)
-        {
-            _max = results.length;
-                                    
-            if(id_select - 1 > _max || id_select < 0)
+    if(id_select.toString().trim() != "NaN")
+    {
+        var sql = "SELECT * FROM character_list WHERE chr_id = " + id_select + ";";
+        console.log(id_select)
+        con.query(sql, function (err, result, field) {
+            if (err) throw console.log(err);
+            
+            
+            var sql2 = "SELECT * FROM character_list;";
+            con.query(sql2, function (err, results, field)
             {
-                
-                let json_obj = {
-                    max: results.length
-                }
-                res.json(json_obj)
-                
-            }else{
-                let json_student_obj = {
-                    name: result[0].name,
-                    gender: result[0].gender,
-                    description: result[0].description,
-                    personality: result[0].personality,
-                    opinion: result[0].opinion,
-                    romance: result[0].romance,
-                    location: result[0].location
-                }
+                _max = results.length;
+                                        
+                if(id_select - 1 > _max || id_select < 0)
+                {
+                    
+                    let json_obj = {
+                        max: results.length
+                    }
+                    res.json(json_obj)
+                    
+                }else{
+                    let json_student_obj = {
+                        name: result[0].name,
+                        gender: result[0].gender,
+                        description: result[0].description,
+                        personality: result[0].personality,
+                        opinion: result[0].opinion,
+                        romance: result[0].romance,
+                        location: result[0].location
+                    }
 
-                res.json(json_student_obj)
-            }
-        })
-    });
+                    res.json(json_student_obj)
+                }
+            })
+        });
+    }else{
+        res.send('<html><head><meta http-equiv="refresh" content="0; url=https://someboringnerd.xyz/api/ttd/student/all"/></html></head>')
+    }
 });
 
 api.get(sub + '/ttd/student/all', (req, res) => {
+    
     var sql = "SELECT * FROM character_list";
 
     //console.log(id_select)
@@ -226,6 +247,7 @@ api.get(sub + '/ttd/student/all', (req, res) => {
 
         res.json(json_student_obj_all)
     });
+    
 })
 
 api.get(sub + '/ttd/download/win', (req, res) => {
