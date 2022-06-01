@@ -163,7 +163,7 @@ api.get(sub + '/status', (req, res) =>
 
 api.get(sub + '/ttd/student', (req, res) =>
 {
-    let id_select = parseInt(req.query.id) + 1;
+    let id_select = parseInt(req.query.id);
 
     var sql = "SELECT * FROM character_list WHERE chr_id = " + id_select + ";";
     console.log(id_select)
@@ -176,7 +176,7 @@ api.get(sub + '/ttd/student', (req, res) =>
         {
             _max = results.length;
                                     
-            if(id_select - 1 > _max || id_select <= 1)
+            if(id_select - 1 > _max || id_select < 0)
             {
                 
                 let json_obj = {
@@ -200,6 +200,33 @@ api.get(sub + '/ttd/student', (req, res) =>
         })
     });
 });
+
+api.get(sub + '/ttd/student/all', (req, res) => {
+    var sql = "SELECT * FROM character_list";
+
+    //console.log(id_select)
+    
+    con.query(sql, function (err, result, field) {
+        if (err) throw console.log(err);
+        
+        
+        _max = result.length - 1;
+        
+        let _chr = []
+
+        for(let i = 0; i != _max; i++)
+        {
+            _chr.push(result[i].name)
+        }
+
+        let json_student_obj_all = {
+            name: _chr,
+            max: _max
+        }
+
+        res.json(json_student_obj_all)
+    });
+})
 
 api.get(sub + '/ttd/download/win', (req, res) => {
     res.send('<html><head><meta http-equiv="refresh" content="0; url=https://someboringnerd.xyz/download/latest_win.zip"/></html></head>')
