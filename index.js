@@ -235,7 +235,7 @@ api.get(sub + '/ttd/student/all', (req, res) => {
         
         let _chr = []
 
-        for(let i = 0; i != _max; i++)
+        for(let i = 0; i != (_max + 1); i++)
         {
             _chr.push(result[i].name)
         }
