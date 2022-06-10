@@ -10,42 +10,36 @@ const { Webhook, Embed } = require('simple-discord-wh');
 
 const bodyParser = require('body-parser')
 
-const crypto = require('crypto');
-const exec = require('child_process');
+let config=require('./config.json')
 
-var config=require('./config.json')
+let GithubWebHook = require('express-github-webhook');
 
-var GithubWebHook = require('express-github-webhook');
-const { append } = require('express/lib/response');
-
-var secret = config.github_secret;
-var webhook = config.webhook;
-var webhook_api = config.webhook_api;
-var webhook_loader = config.webhook_loader;
-var domain = config.domain;
-
-var sql = false;
+let secret = config.github_secret;
+let webhook = config.webhook;
+let webhook_api = config.webhook_api;
+let webhook_loader = config.webhook_loader;
+let domain = config.domain;
 
 const limiter = rateLimit({
-	windowMs: 1 * 60 * 1000, // 1 minutes
-	max: 25, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    windowMs: 60 * 1000, // 1 minutes
+    max: 25, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 })
 
-    var con = mysql.createConnection({
-        host: config.db_host,
-        user: config.db_user,
-        password: config.db_password,
-        database: config.db_database
-    });
+let con = mysql.createConnection({
+    host: config.db_host,
+    user: config.db_user,
+    password: config.db_password,
+    database: config.db_database
+});
 
-    con.connect(function(err) {
-        if (err) throw err;
-        console.log("Connected!");
-    });
+con.connect(function(err) {
+    if (err) throw err;
+    console.log("Connected!");
+});
 
-var webhookHandler = GithubWebHook({ path: '/api/hook/ttd', secret: secret });
+let webhookHandler = GithubWebHook({ path: '/api/hook/ttd', secret: secret });
 const hook_game = new Webhook(webhook)
 const hook_modding = new Webhook(webhook_api)
 const hook_loader = new Webhook(webhook_loader)
@@ -70,10 +64,10 @@ webhookHandler.on('*', function (event, repo, data) {
         title_and_message = "No title given \n\n No description given"
     }
 
-    let splited = title_and_message.split('\n\n')
-    let title = splited[0]
-    splited[0] = '';
-    let msg = splited.join("");
+    let split = title_and_message.split('\n\n')
+    let title = split[0]
+    split[0] = '';
+    let msg = split.join("");
 
     switch(data['repository']['full_name']){
         case "SomeBoringNerd/throughthedark":
@@ -85,7 +79,7 @@ webhookHandler.on('*', function (event, repo, data) {
                 .setColor('#00b0f4')
                 .setTimestamp();
 
-                hook_1.send(hook_game);
+            hook_1.send(hook_game);
             break;
         case "UnityModdingGroup/ModTemplate":
             const hook_2 = new Embed()
@@ -96,7 +90,7 @@ webhookHandler.on('*', function (event, repo, data) {
                 .setColor('#00b0f4')
                 .setTimestamp();
 
-                hook_2.send(hook_modding);
+            hook_2.send(hook_modding);
             break;
         case "UnityModdingGroup/UnityModLoader":
             const hook_3 = new Embed()
@@ -107,7 +101,7 @@ webhookHandler.on('*', function (event, repo, data) {
                 .setColor('#00b0f4')
                 .setTimestamp();
 
-                hook_3.send(hook_loader);
+            hook_3.send(hook_loader);
             break;
     }
 
@@ -127,14 +121,12 @@ api.use(webhookHandler);
 api.set('trust proxy', 1)
 api.get('/api/ip', (request, response) => response.send(request.ip))
 
-
-
 api.get(sub, (req, res) => {
 
     let txt = "";
-    txt += "<html>\n<head>\n<title>" + ip + "/api" + "</title>\n</head>\n"
+    txt += '<html lang="fr">\n<head>\n<title>" + ip + "/api" + "</title>\n</head>\n'
     txt += '<h1>list of valid endpoints</h1>\n';
-    
+
     txt += '<a href="/api/ttd/student?id=1">https://' + ip + '/api/ttd/student?id=1</a>\n<br><br>\n'
     txt += '<a href="/api/status?ip=4b4f.org">https://' + ip + '/api/status?ip=4b4f.org</a>\n<br><br>\n'
     txt += '<a href="/api/ttd/download/win">https://' + ip + '/api/ttd/download/win</a>\n<br><br>\n'
@@ -147,7 +139,7 @@ api.get(sub, (req, res) => {
 api.get(sub + '/status', (req, res) => 
 {
 
-    if(req.query.ip == undefined)
+    if(req.query.ip === undefined)
     {
         res.send('please enter an ip like this : <a href="/api/status?ip=4b4f.org">/api/status?ip=4b4f.org<a>')
     }
@@ -155,59 +147,62 @@ api.get(sub + '/status', (req, res) =>
     {
         let minecraft_status = "";
         needle('get', "https://api.mcsrvstat.us/2/" + req.query.ip).then(r => {
-            try{
-                minecraft_status += "<html>\n<head>\n<title>Minecraft Lookup</title>\n</head>\n"
-                minecraft_status += "<h1>info about the server " + req.query.ip + "</h1>\n<body>\n"
-                
-                minecraft_status += "ip : " + r.body['ip'] + '\n'
-                minecraft_status += "<br>port : " + r.body['port'] + '\n'
-                minecraft_status += "<br>motd : " + r.body['motd']['clean'][0] + '\n'
-                minecraft_status += "<br>motd² : " + r.body['motd']['clean'][1] + '\n'
-                minecraft_status += "<br>player count : " + r.body['players']['online'] + '\n'
+        try{
 
-                if(req.query.ip == "2b2t.org")
-                {
-                    minecraft_status += "<br><h1>2b2t specific stuff</h1>\n"
-                    minecraft_status += "<h3>queue</h3>\n"
-                    minecraft_status += r.body['info']['clean'][1] + "<br>\n"
-                    minecraft_status += r.body['info']['clean'][0] + "\n"
-                }
+            minecraft_status += "<html>\n<head>\n<title>Minecraft Lookup</title>\n</head>\n"
+            minecraft_status += "<h1>info about the server " + req.query.ip + "</h1>\n<body>\n"
 
-                minecraft_status += '<h3> values fetched from <a href="https://api.mcsrvstat.us">api.mcsrvstat.us</a></h3>\n</body>\n</html>'
-            }catch{
-                minecraft_status = 'an error has occured with the api, please try again later'
+            minecraft_status += "ip : " + r.body['ip'] + '\n'
+            minecraft_status += "<br>port : " + r.body['port'] + '\n'
+            minecraft_status += "<br>motd : " + r.body['motd']['clean'][0] + '\n'
+            minecraft_status += "<br>motd² : " + r.body['motd']['clean'][1] + '\n'
+            minecraft_status += "<br>player count : " + r.body['players']['online'] + '\n'
+
+            if(req.query.ip == "2b2t.org")
+            {
+                minecraft_status += "<br><h1>2b2t specific stuff</h1>\n"
+                minecraft_status += "<h3>queue</h3>\n"
+                minecraft_status += r.body['info']['clean'][1] + "<br>\n"
+                minecraft_status += r.body['info']['clean'][0] + "\n"
             }
+
+            minecraft_status += '<h3> values fetched from <a href="https://api.mcsrvstat.us">api.mcsrvstat.us</a></h3>\n</body>\n</html>'
+
+        }catch{
+            minecraft_status = 'an error has occured with the api, please try again later'
+        }
             res.send(minecraft_status)
         })
-
     }
 })
 
 api.get(sub + '/ttd/student', (req, res) =>
 {
     let id_select = parseInt(req.query.id);
-    if(id_select.toString().trim() != "NaN")
+
+    if(id_select.toString().trim() !== "NaN")
     {
-        var sql = "SELECT * FROM character_list WHERE chr_id = " + id_select + ";";
+        let sql = "SELECT * FROM character_list WHERE chr_id = " + id_select + ";";
         console.log(id_select)
+
         con.query(sql, function (err, result, field) {
             if (err) throw console.log(err);
-            
-            
-            var sql2 = "SELECT * FROM character_list;";
+
+            let sql2 = "SELECT * FROM character_list;";
             con.query(sql2, function (err, results, field)
             {
                 _max = results.length;
-                                        
+
                 if(id_select - 1 > _max || id_select < 0)
                 {
-                    
                     let json_obj = {
                         max: results.length
                     }
+
                     res.json(json_obj)
-                    
-                }else{
+                }
+                else
+                {
                     let json_student_obj = {
                         name: result[0].name,
                         gender: result[0].gender,
@@ -228,20 +223,18 @@ api.get(sub + '/ttd/student', (req, res) =>
 });
 
 api.get(sub + '/ttd/student/all', (req, res) => {
-    
-    var sql = "SELECT * FROM character_list";
+
+    let sql = "SELECT * FROM character_list";
 
     //console.log(id_select)
-    
+
     con.query(sql, function (err, result, field) {
         if (err) throw console.log(err);
-        
-        
-        _max = result.length - 1;
-        
-        let _chr = []
 
-        for(let i = 0; i != (_max + 1); i++)
+        _max = result.length - 1;
+
+        let _chr = []
+        for(let i = 0; i !== (_max + 1); i++)
         {
             _chr.push(result[i].name)
         }
@@ -253,7 +246,6 @@ api.get(sub + '/ttd/student/all', (req, res) => {
 
         res.json(json_student_obj_all)
     });
-    
 })
 
 api.get(sub + '/ttd/download/win', (req, res) => {
@@ -292,66 +284,32 @@ api.post(sub + '/ttd/add/post', (req, res) =>
 
     if(req.body.token != config.chr_add_token)
     {
-        char_add = "wrong password"   
-    }else
+    char_add = "wrong password"
+    }
+    else
     {
-        
-        var sql = "INSERT INTO character_list (name, gender, description, opinion, romance, personality, location) VALUES ?";
-        var values = [
+        let sql = "INSERT INTO character_list (name, gender, description, opinion, romance, personality, location) VALUES ?";
+        let values = [
             [req.body.name,req.body.gender,req.body.desc,req.body.opinion,req.body.romance,req.body.personality,req.body.location]
         ];
+
         con.query(sql, [values], function (err, result) {
             if (err) throw char_add = err;
         });
     }
 
-    res.send(char_add)
+    res.send('<script>alert("added with success")</script><html><head><meta http-equiv="refresh" content="0; url=https://someboringnerd.xyz/api/ttd/student/all"/></html></head>')
 })
 
+// legacy code to not break the integrated image host, please ignore.
 const path = require('path')
 
 api.use(sub + '/img', express.static(path.join(__dirname, 'img/')))
 api.use(sub + '/host', express.static(path.join(__dirname, 'host/')))
 
-api.post(sub + '/host', upload.single('sharex') ,(req, res) => 
-{
-
-    if(req.body.secret != config.img_secret) return res.send('wrong token!');
-
-    let content = '<html>' +
-    '<head>' +
-            '<meta name="twitter:card" content="summary_large_image">' +
-            '<meta property="og:title" content="' + config.img_title + '" />' +
-            '<meta property="og:type" content="website" />' +
-            '<meta property="og:site_name" content="' + config.img_site_name + '"/>' +
-            '<meta property="og:image" content="/api/img/' + req.file.filename + '"/>' +
-            '<meta property="og:description" content="' + config.img_description + '">' +
-            '<meta name="theme-color" content="#0C2C63">' +
-            '<link type="application/json+oembed" href="">' +
-        '<link rel="stylesheet" href="/upload.css">' +
-    '</head>' +
-    '<body>' +
-        '<center>' +
-            '<h1>here you go ! :-)</h1>' +
-            '<img src="/api/img/' + req.file.filename + '">' +
-            '<h3>Honestly, i don\'t think you should open weird links on discord, or anywhere on the internet for what matter</h3>' +
-            '<h4>made by <a href="https://github.com/SomeBoringNerd">SomeBoringNerd</a></h4><br>' +
-        '</center>' +
-    '</body>' +
-'</html>';
-
-    let def = generateRandomString(6)
-
-    fs.writeFile(path.join(__dirname, '/host/' + def + '.html'), content, (err) => {
-        if (err)
-          console.log(err);
-    });
-    
-    res.send("https://someboringnerd.xyz/api/host/" + def);
-})
-
 api.get(sub + '/host/:img_id', (req, res) => {
     if(!fs.existsSync(path.join(__dirname, '/host/' + req.params.img_id + '.html'))) return res.send('Not your lucky day, there\'s nothing here.');
+
     res.sendFile(path.join(__dirname, '/host/' + req.params.img_id + '.html'));
 })
 
@@ -359,10 +317,8 @@ const generateRandomString = (myLength) => {
     const chars = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
 
     const randomArray = Array.from(
-        { length: myLength },
-        (v, k) => chars[Math.floor(Math.random() * chars.length)]
+    { length: myLength }, (v, k) => chars[Math.floor(Math.random() * chars.length)]
     );
 
-    const randomString = randomArray.join("");
-    return randomString;
+    return randomArray.join("");
 };
