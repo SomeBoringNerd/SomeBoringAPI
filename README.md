@@ -6,6 +6,8 @@ just an average backend api that have nothing special, outside of stuff for my o
 
 /api/ttd/student?id=[number] : return a json array with the infos of a character of my game
 
+/api/ttd/student/[number] : return a json array with the infos of a character of my game
+
 /api/ttd/student/all : return a json array with the id and name of all characters in the database
 
 /api/status?ip=[ip] : give infos of the minecraft server given (with additional info for specifics servers)

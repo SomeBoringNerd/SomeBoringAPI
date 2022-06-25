@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit')
 const multer  = require('multer')
 const upload = multer({ dest: 'img/' })
 const fs = require('fs');
+const path = require('path');
 
 const { Webhook, Embed } = require('simple-discord-wh');
 
@@ -22,7 +23,7 @@ let domain = config.domain;
 
 const limiter = rateLimit({
     windowMs: 60 * 1000, // 1 minutes
-    max: 25, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+    max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 })
@@ -50,6 +51,8 @@ const ip = domain;
 const port = 1234
 
 let sub = "/api"
+
+api.use(sub + '/rsc', express.static(path.join(__dirname, 'rescources/')))
 
 webhookHandler.on('*', function (event, repo, data) {
 
@@ -183,7 +186,6 @@ api.get(sub + '/ttd/student', (req, res) =>
     if(id_select.toString().trim() !== "NaN")
     {
         let sql = "SELECT * FROM character_list WHERE chr_id = " + id_select + ";";
-        console.log(id_select)
 
         con.query(sql, function (err, result, field) {
             if (err) throw console.log(err);
@@ -191,12 +193,12 @@ api.get(sub + '/ttd/student', (req, res) =>
             let sql2 = "SELECT * FROM character_list;";
             con.query(sql2, function (err, results, field)
             {
-                _max = results.length;
+                _max = results.length - 1;
 
-                if(id_select - 1 > _max || id_select < 0)
+                if(id_select > _max || id_select < 0)
                 {
                     let json_obj = {
-                        max: results.length
+                        max: results.length - 1
                     }
 
                     res.json(json_obj)
@@ -221,6 +223,52 @@ api.get(sub + '/ttd/student', (req, res) =>
         res.send('<html><head><meta http-equiv="refresh" content="0; url=https://someboringnerd.xyz/api/ttd/student/all"/></html></head>')
     }
 });
+
+api.get(sub + '/ttd/student/:id', (req, res) =>
+{
+    let id_select = parseInt(req.params.id);
+
+    if(id_select.toString().trim() !== "NaN")
+    {
+        let sql = "SELECT * FROM character_list WHERE chr_id = " + id_select + ";";
+
+        con.query(sql, function (err, result, field) {
+            if (err) throw console.log(err);
+
+            let sql2 = "SELECT * FROM character_list;";
+            con.query(sql2, function (err, results, field)
+            {
+                _max = results.length - 1;
+
+                if(id_select > _max || id_select < 0)
+                {
+                    let json_obj = {
+                        max: results.length - 1
+                    }
+
+                    res.json(json_obj)
+                }
+                else
+                {
+                    let json_student_obj = {
+                        name: result[0].name,
+                        gender: result[0].gender,
+                        description: result[0].description,
+                        personality: result[0].personality,
+                        opinion: result[0].opinion,
+                        romance: result[0].romance,
+                        location: result[0].location
+                    }
+
+                    res.json(json_student_obj)
+                }
+            })
+        });
+    }else{
+        res.send('<html><head><meta http-equiv="refresh" content="0; url=https://someboringnerd.xyz/api/ttd/student/all"/></html></head>')
+    }
+});
+
 
 api.get(sub + '/ttd/student/all', (req, res) => {
 
@@ -278,6 +326,39 @@ api.get(sub + '/ttd/add/pre', (req, res) => {
     res.send(add_pre)
 })
 
+api.get(sub + '/gtfo/:id', (req, res) => {
+
+    let _gtfo = [
+        "1.png",
+        "2.jpg",
+        "3.jpg",
+        "4.jpg",
+        "5.jpg",
+        "6.png",
+    ];
+
+    let x = Math.floor(Math.random() * _gtfo.length);
+
+    let img_url = 'https://someboringnerd.xyz/api/rsc/gtfo/' + _gtfo[parseInt(req.params.id)];
+
+    let gtfo = `
+<html>
+    <head>
+        <meta name="twitter:card" content="summary_large_image">
+        <meta property="og:title" content="GET THE FUCK OUT OF HERE" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="https://someboringnerd.xyz" />
+        <meta property="og:image" content="${img_url}"/>
+        <meta property="og:description" content="no one like you">
+        <meta name="theme-color" content="#0C2C63">
+    </head>
+
+</html>
+    `
+
+    res.send(gtfo)
+})
+
 api.post(sub + '/ttd/add/post', (req, res) => 
 {
     let char_add = ""
@@ -302,7 +383,7 @@ api.post(sub + '/ttd/add/post', (req, res) =>
 })
 
 // legacy code to not break the integrated image host, please ignore.
-const path = require('path')
+//const path = require('path');
 
 api.use(sub + '/img', express.static(path.join(__dirname, 'img/')))
 api.use(sub + '/host', express.static(path.join(__dirname, 'host/')))
