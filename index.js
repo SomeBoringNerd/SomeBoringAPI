@@ -76,6 +76,9 @@ webhookHandler.on('*', function (event, repo, data) {
         case "SomeBoringNerd/throughthedark":
             const hook_1 = new Embed()
                 .setTitle('New commit on ' + data['repository']['full_name'])
+                .addField('Branch : ' + data['ref'], true)
+                .addField('Commit by : ', data['sender']['login'], true)
+                .addField('Git status : ', data['visibility'], false)
                 .setAuthor('SomeBoringAPI', 'https://cdn.discordapp.com/avatars/283205890474115072/6c7f9f422b07832ea61721dd8f5627db.webp', 'https://someboringnerd.xyz/api')
                 .addField('Title', title , true)
                 .addField('Description', msg , true)
@@ -87,6 +90,9 @@ webhookHandler.on('*', function (event, repo, data) {
         case "UnityModdingGroup/ModTemplate":
             const hook_2 = new Embed()
                 .setTitle('New commit on ' + data['repository']['full_name'])
+                .addField('Branch : ' + data['ref'], true)
+                .addField('Commit by : ', data['sender']['login'], true)
+                .addField('Git status : ', data['visibility'], false)
                 .setAuthor('SomeBoringAPI', 'https://cdn.discordapp.com/avatars/283205890474115072/6c7f9f422b07832ea61721dd8f5627db.webp', 'https://someboringnerd.xyz/api')
                 .addField('Title', title , true)
                 .addField('Description', msg , true)
@@ -98,6 +104,9 @@ webhookHandler.on('*', function (event, repo, data) {
         case "UnityModdingGroup/UnityModLoader":
             const hook_3 = new Embed()
                 .setTitle('New commit on ' + data['repository']['full_name'])
+                .addField('Branch : ' + data['ref'], true)
+                .addField('Commit by : ', data['sender']['login'], true)
+                .addField('Git status : ', data['visibility'], false)
                 .setAuthor('SomeBoringAPI', 'https://cdn.discordapp.com/avatars/283205890474115072/6c7f9f422b07832ea61721dd8f5627db.webp', 'https://someboringnerd.xyz/api')
                 .addField('Title', title , true)
                 .addField('Description', msg , true)
@@ -376,6 +385,34 @@ api.post(sub + '/ttd/add/post', (req, res) =>
     }
 
     res.send('<script>alert("added with success")</script><html><head><meta http-equiv="refresh" content="0; url=https://someboringnerd.xyz/api/ttd/student/all"/></html></head>')
+})
+
+// embed for selfbot
+api.get(sub + '/self/help', (req, res) => {
+    res.send(`<html>
+    <head>
+        <meta name="twitter:card" content="summary_large_image">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://github.com/SomeBoringNerd">
+        <meta property="og:title" content="SomeBoringSelfbot">
+        <meta property="og:description" content="**Main commands**\n_help : show this menu\n_queue : show 2b2t's queue (fetched from 2b2t.io)">
+        <meta property="og:image" content="https://i.pinimg.com/originals/e1/85/18/e18518c6d24257c6fb02e3c95a862d85.gif" />
+    </head>
+    `)
+})
+
+
+api.get(sub + '/self/pet', (req, res) => {
+    res.send(`<html>
+    <head>
+        <meta name="twitter:card" content="summary_large_image">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="https://github.com/SomeBoringNerd">
+        <meta property="og:title" content="SomeBoringSelfbot">
+        <meta property="og:description" content="${req.query.user1} headpated ${req.query.user2}">
+        <meta property="og:image" content="https://i.pinimg.com/originals/e1/85/18/e18518c6d24257c6fb02e3c95a862d85.gif" />
+    </head>
+    `)
 })
 
 // legacy code to not break the integrated image host, please ignore.
